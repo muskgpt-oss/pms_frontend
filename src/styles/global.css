@@ -1,0 +1,422 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --pms-surface: #ffffff;
+  --pms-bg: #f4eff2;
+  --pms-radius: 14px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #06080d;
+  color: #e5e7eb;
+}
+
+footer {
+  display: none !important;
+}
+
+button,
+input,
+textarea,
+select {
+  border-radius: var(--pms-radius) !important;
+}
+
+img,
+video,
+canvas,
+svg {
+  max-width: 100%;
+}
+
+@media (max-width: 768px) {
+  body {
+    font-size: 14px;
+  }
+}
+
+/* Theme bridge: keep logic intact, swap visual tone to blue */
+.text-pink-700 {
+  color: #2563eb !important;
+}
+
+.text-pink-200 {
+  color: #bfdbfe !important;
+}
+
+.bg-pink-50 {
+  background-color: #eff6ff !important;
+}
+
+.bg-\[\#f8edf2\],
+.bg-\[\#f6eef2\] {
+  background-color: #eef4ff !important;
+}
+
+.border-pink-700,
+.border-pink-600,
+.border-pink-500,
+.border-pink-300,
+.border-pink-200 {
+  border-color: #3b82f6 !important;
+}
+
+.ring-pink-200 {
+  --tw-ring-color: rgb(191 219 254 / 1) !important;
+}
+
+.from-pink-700 {
+  --tw-gradient-from: #1d4ed8 var(--tw-gradient-from-position) !important;
+  --tw-gradient-to: rgb(29 78 216 / 0) var(--tw-gradient-to-position) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+}
+
+.to-fuchsia-600 {
+  --tw-gradient-to: #3b82f6 var(--tw-gradient-to-position) !important;
+}
+
+/* Global dark theme overrides */
+:root {
+  color-scheme: dark;
+}
+
+.bg-white {
+  background-color: #0f172a !important;
+}
+
+.bg-slate-50,
+.bg-slate-100,
+.bg-\[\#f5f6fb\],
+.bg-\[\#f6f7fb\],
+.bg-\[\#f3f4f8\],
+.bg-\[\#f3f5fa\],
+.bg-\[\#f8f9fc\] {
+  background-color: #0b1220 !important;
+}
+
+.text-slate-900 {
+  color: #f8fafc !important;
+}
+
+.text-slate-800 {
+  color: #e2e8f0 !important;
+}
+
+.text-slate-700 {
+  color: #cbd5e1 !important;
+}
+
+.text-slate-600,
+.text-slate-500,
+.text-slate-400 {
+  color: #94a3b8 !important;
+}
+
+.border-slate-200,
+.border-slate-300,
+.border-slate-700 {
+  border-color: #334155 !important;
+}
+
+.hover\:bg-slate-100:hover,
+.hover\:bg-slate-50:hover {
+  background-color: #172033 !important;
+}
+
+.bg-blue-100 {
+  background-color: #1e3a8a !important;
+}
+
+.text-blue-800,
+.text-blue-700 {
+  color: #93c5fd !important;
+}
+
+.bg-blue-600 {
+  background-color: #2563eb !important;
+}
+
+.text-white {
+  color: #f8fafc !important;
+}
+
+/* Ensure readable black text on light backgrounds */
+.bg-slate-50 .text-white,
+.bg-slate-100 .text-white,
+.bg-blue-50 .text-white,
+.bg-emerald-50 .text-white,
+.bg-amber-50 .text-white,
+.bg-red-50 .text-white,
+.bg-rose-50 .text-white {
+  color: #0f172a !important;
+}
+
+.bg-slate-50,
+.bg-slate-100,
+.bg-blue-50,
+.bg-emerald-50,
+.bg-amber-50,
+.bg-red-50,
+.bg-rose-50 {
+  color: #0f172a !important;
+}
+
+/* Keep onboarding/domain cards light with dark readable text */
+.bg-white\/70,
+.bg-white\/75,
+.bg-white\/80 {
+  background-color: #ffffff !important;
+}
+
+.bg-white\/70 .text-slate-900,
+.bg-white\/75 .text-slate-900,
+.bg-white\/80 .text-slate-900,
+.bg-white\/70 .text-slate-800,
+.bg-white\/75 .text-slate-800,
+.bg-white\/80 .text-slate-800,
+.bg-white\/70 .text-slate-700,
+.bg-white\/75 .text-slate-700,
+.bg-white\/80 .text-slate-700,
+.bg-white\/70 .text-slate-600,
+.bg-white\/75 .text-slate-600,
+.bg-white\/80 .text-slate-600,
+.bg-white\/70 .text-slate-500,
+.bg-white\/75 .text-slate-500,
+.bg-white\/80 .text-slate-500 {
+  color: #0f172a !important;
+}
+
+.bg-white\/70 h3,
+.bg-white\/75 h3,
+.bg-white\/80 h3 {
+  color: #0f172a !important;
+}
+
+/* On light surfaces, force dark readable content across onboarding/dashboard */
+.bg-slate-50 h1,
+.bg-slate-50 h2,
+.bg-slate-50 h3,
+.bg-slate-50 h4,
+.bg-slate-50 h5,
+.bg-slate-50 h6,
+.bg-slate-50 p,
+.bg-slate-50 span,
+.bg-slate-50 label,
+.bg-slate-50 li,
+.bg-slate-50 a,
+.bg-slate-50 button,
+.bg-slate-50 input,
+.bg-slate-50 textarea,
+.bg-slate-50 select,
+.bg-slate-100 h1,
+.bg-slate-100 h2,
+.bg-slate-100 h3,
+.bg-slate-100 h4,
+.bg-slate-100 h5,
+.bg-slate-100 h6,
+.bg-slate-100 p,
+.bg-slate-100 span,
+.bg-slate-100 label,
+.bg-slate-100 li,
+.bg-slate-100 a,
+.bg-slate-100 button,
+.bg-slate-100 input,
+.bg-slate-100 textarea,
+.bg-slate-100 select,
+.bg-white\/70 h1,
+.bg-white\/70 h2,
+.bg-white\/70 h3,
+.bg-white\/70 h4,
+.bg-white\/70 h5,
+.bg-white\/70 h6,
+.bg-white\/70 p,
+.bg-white\/70 span,
+.bg-white\/70 label,
+.bg-white\/70 li,
+.bg-white\/70 a,
+.bg-white\/70 button,
+.bg-white\/70 input,
+.bg-white\/70 textarea,
+.bg-white\/70 select,
+.bg-white\/75 h1,
+.bg-white\/75 h2,
+.bg-white\/75 h3,
+.bg-white\/75 h4,
+.bg-white\/75 h5,
+.bg-white\/75 h6,
+.bg-white\/75 p,
+.bg-white\/75 span,
+.bg-white\/75 label,
+.bg-white\/75 li,
+.bg-white\/75 a,
+.bg-white\/75 button,
+.bg-white\/75 input,
+.bg-white\/75 textarea,
+.bg-white\/75 select,
+.bg-white\/80 h1,
+.bg-white\/80 h2,
+.bg-white\/80 h3,
+.bg-white\/80 h4,
+.bg-white\/80 h5,
+.bg-white\/80 h6,
+.bg-white\/80 p,
+.bg-white\/80 span,
+.bg-white\/80 label,
+.bg-white\/80 li,
+.bg-white\/80 a,
+.bg-white\/80 button,
+.bg-white\/80 input,
+.bg-white\/80 textarea,
+.bg-white\/80 select {
+  color: #0f172a !important;
+}
+
+.bg-slate-50 input::placeholder,
+.bg-slate-50 textarea::placeholder,
+.bg-slate-100 input::placeholder,
+.bg-slate-100 textarea::placeholder,
+.bg-white\/70 input::placeholder,
+.bg-white\/70 textarea::placeholder,
+.bg-white\/75 input::placeholder,
+.bg-white\/75 textarea::placeholder,
+.bg-white\/80 input::placeholder,
+.bg-white\/80 textarea::placeholder {
+  color: #475569 !important;
+  opacity: 1;
+}
+
+/* Keep primary CTA legible */
+.bg-blue-600,
+.bg-blue-700,
+.bg-blue-800 {
+  color: #f8fafc !important;
+}
+
+/* On dark surfaces, force light readable content */
+.bg-white,
+.bg-\[\#0f1320\],
+.bg-\[\#111827\],
+.bg-\[\#0b1220\],
+.bg-slate-800,
+.bg-slate-900 {
+  color: #e2e8f0 !important;
+}
+
+.bg-white h1,
+.bg-white h2,
+.bg-white h3,
+.bg-white h4,
+.bg-white h5,
+.bg-white h6,
+.bg-white p,
+.bg-white span,
+.bg-white label,
+.bg-white li,
+.bg-white a,
+.bg-white button,
+.bg-white input,
+.bg-white textarea,
+.bg-white select,
+.bg-\[\#0f1320\] h1,
+.bg-\[\#0f1320\] h2,
+.bg-\[\#0f1320\] h3,
+.bg-\[\#0f1320\] h4,
+.bg-\[\#0f1320\] h5,
+.bg-\[\#0f1320\] h6,
+.bg-\[\#0f1320\] p,
+.bg-\[\#0f1320\] span,
+.bg-\[\#0f1320\] label,
+.bg-\[\#0f1320\] li,
+.bg-\[\#0f1320\] a,
+.bg-\[\#111827\] h1,
+.bg-\[\#111827\] h2,
+.bg-\[\#111827\] h3,
+.bg-\[\#111827\] h4,
+.bg-\[\#111827\] h5,
+.bg-\[\#111827\] h6,
+.bg-\[\#111827\] p,
+.bg-\[\#111827\] span,
+.bg-\[\#111827\] label,
+.bg-\[\#111827\] li,
+.bg-\[\#111827\] a {
+  color: #e2e8f0 !important;
+}
+
+/* Preview board light mock columns keep dark text */
+.bg-\[\#f3eef1\],
+.bg-\[\#f3eef1\] p,
+.bg-\[\#f3eef1\] span,
+.bg-\[\#f3eef1\] h1,
+.bg-\[\#f3eef1\] h2,
+.bg-\[\#f3eef1\] h3,
+.bg-\[\#f3eef1\] h4 {
+  color: #0f172a !important;
+}
+
+/* Light cards (including selected blue-50 blocks) must always use dark text */
+.bg-blue-50,
+.bg-emerald-50,
+.bg-amber-50,
+.bg-red-50,
+.bg-rose-50 {
+  color: #0f172a !important;
+}
+
+.bg-blue-50 h1, .bg-blue-50 h2, .bg-blue-50 h3, .bg-blue-50 h4, .bg-blue-50 h5, .bg-blue-50 h6,
+.bg-blue-50 p, .bg-blue-50 span, .bg-blue-50 label, .bg-blue-50 li, .bg-blue-50 a, .bg-blue-50 button,
+.bg-emerald-50 h1, .bg-emerald-50 h2, .bg-emerald-50 h3, .bg-emerald-50 h4, .bg-emerald-50 h5, .bg-emerald-50 h6,
+.bg-emerald-50 p, .bg-emerald-50 span, .bg-emerald-50 label, .bg-emerald-50 li, .bg-emerald-50 a, .bg-emerald-50 button,
+.bg-amber-50 h1, .bg-amber-50 h2, .bg-amber-50 h3, .bg-amber-50 h4, .bg-amber-50 h5, .bg-amber-50 h6,
+.bg-amber-50 p, .bg-amber-50 span, .bg-amber-50 label, .bg-amber-50 li, .bg-amber-50 a, .bg-amber-50 button,
+.bg-red-50 h1, .bg-red-50 h2, .bg-red-50 h3, .bg-red-50 h4, .bg-red-50 h5, .bg-red-50 h6,
+.bg-red-50 p, .bg-red-50 span, .bg-red-50 label, .bg-red-50 li, .bg-red-50 a, .bg-red-50 button,
+.bg-rose-50 h1, .bg-rose-50 h2, .bg-rose-50 h3, .bg-rose-50 h4, .bg-rose-50 h5, .bg-rose-50 h6,
+.bg-rose-50 p, .bg-rose-50 span, .bg-rose-50 label, .bg-rose-50 li, .bg-rose-50 a, .bg-rose-50 button {
+  color: #0f172a !important;
+}
+
+/* Better hover/focus visibility across dark theme */
+button,
+input,
+textarea,
+select {
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+}
+
+button:hover {
+  filter: brightness(1.08);
+}
+
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5) !important;
+  border-color: #3b82f6 !important;
+}
+
+/* Keep dark-surface form fields readable while hovering/typing */
+.bg-white input,
+.bg-white textarea,
+.bg-white select,
+.bg-\[\#0f1320\] input,
+.bg-\[\#0f1320\] textarea,
+.bg-\[\#0f1320\] select {
+  color: #e2e8f0 !important;
+}
+
+.bg-white input::placeholder,
+.bg-white textarea::placeholder,
+.bg-\[\#0f1320\] input::placeholder,
+.bg-\[\#0f1320\] textarea::placeholder {
+  color: #94a3b8 !important;
+}
