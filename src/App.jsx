@@ -330,6 +330,24 @@ export default function App() {
   }, [issuesResponse])
 
   const selectedProject = projects.find((project) => project.id === selectedProjectId)
+  const projectMembers = useMemo(() => {
+    if (!selectedProject) return []
+    const list = []
+    if (selectedProject.lead) {
+      list.push(selectedProject.lead)
+    }
+    if (Array.isArray(selectedProject.members)) {
+      selectedProject.members.forEach((m) => {
+        if (m && !list.includes(m)) list.push(m)
+      })
+    }
+    if (Array.isArray(selectedProject.member_roles)) {
+      selectedProject.member_roles.forEach((m) => {
+        if (m && m.email && !list.includes(m.email)) list.push(m.email)
+      })
+    }
+    return list
+  }, [selectedProject])
   const currentProjectRole = useMemo(() => {
     const email = String(user?.email || '').toLowerCase()
     if (!selectedProject || !email) return 'lead'
@@ -829,7 +847,8 @@ export default function App() {
   const assignIssueDueDate = (issue, targetDate) => {
     const formatted = formatIsoDate(targetDate)
     const nextDescription = setDescriptionField(issue.description || '', 'Due date', formatted)
-    const withStartDate = getIssueDate(issue, 'Start date', 'start date')
+    const existingStart = getIssueDate(issue, 'Start date', 'start date')
+    const withStartDate = existingStart
       ? nextDescription
       : setDescriptionField(nextDescription, 'Start date', formatted)
 
@@ -837,6 +856,8 @@ export default function App() {
       issueId: issue.id,
       payload: {
         description: withStartDate,
+        due_date: `${formatted}T00:00:00Z`,
+        start_date: existingStart ? `${formatIsoDate(existingStart)}T00:00:00Z` : `${formatted}T00:00:00Z`,
       },
     })
   }
@@ -866,25 +887,82 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#f6f7fb] text-slate-900">
-      <header className="flex items-center justify-between border-b border-slate-200 bg-white px-5 py-2.5">
-        <div className="flex items-center gap-4">
-          <span className="text-[34px] font-semibold leading-none text-[#2b5fc7]">PMS</span>
-        </div>
-        <div className="relative flex items-center gap-2 text-sm">
-          <button className="rounded bg-blue-600 px-3 py-1.5 font-medium text-white" onClick={() => openCreateModal()}>
-            + Create
+      <header className="flex items-center justify-between border-b border-brand-border bg-white px-5 py-2.5 sticky top-0 z-30 shadow-sm">
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2 cursor-pointer select-none" onClick={() => setActiveTab('board')}>
+            <svg className="h-6 w-6 text-brand-blue" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            <span className="text-xl font-bold leading-none tracking-tight text-brand-navy">ProStream</span>
+          </div>
+
+          <nav className="hidden lg:flex items-center gap-1.5 text-sm font-medium text-brand-slate">
+            <button className="px-2.5 py-1.5 rounded hover:bg-brand-hover hover:text-brand-navy transition">Your Work</button>
+            <button className="px-2.5 py-1.5 rounded hover:bg-brand-hover hover:text-brand-navy transition" onClick={() => setShowProjectPicker(true)}>Projects <span className="text-xs">▾</span></button>
+            <button className="px-2.5 py-1.5 rounded hover:bg-brand-hover hover:text-brand-navy transition">Filters</button>
+            <button className="px-2.5 py-1.5 rounded hover:bg-brand-hover hover:text-brand-navy transition">Dashboards</button>
+          </nav>
+
+          <button className="rounded bg-brand-blue px-3.5 py-1.5 font-semibold text-white shadow-sm hover:bg-brand-blue-hover transition-colors text-sm" onClick={() => openCreateModal()}>
+            Create
           </button>
+        </div>
+
+        <div className="relative flex items-center gap-3 text-sm">
+          <div className="relative hidden md:block w-48 lg:w-64">
+            <input
+              className="w-full rounded border border-brand-border bg-[#fafbfc] hover:bg-[#ebecf0] px-3 py-1.5 text-xs text-brand-navy focus:outline-none focus:bg-white focus:border-brand-blue focus:ring-1 focus:ring-brand-blue placeholder:text-slate-400 transition-all"
+              placeholder="Search..."
+              value={boardSearch}
+              onChange={(e) => setBoardSearch(e.target.value)}
+            />
+            <span className="absolute right-2.5 top-2 text-slate-400">🔍</span>
+          </div>
+
           <button
             type="button"
-            className="flex items-center gap-2 rounded border border-slate-300 bg-white px-2 py-1.5 text-left text-slate-700 hover:border-blue-500"
+            className="p-1.5 rounded text-brand-slate hover:bg-brand-hover hover:text-brand-navy relative transition"
+            title="Notifications"
+            onClick={() => toggleUtilityPanel('notifications')}
+          >
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+            </svg>
+            {notificationItems.length > 0 && (
+              <span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-rose-500 ring-2 ring-white" />
+            )}
+          </button>
+
+          <button
+            type="button"
+            className="p-1.5 rounded text-brand-slate hover:bg-brand-hover hover:text-brand-navy transition"
+            title="Help"
+            onClick={() => toggleUtilityPanel('help')}
+          >
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </button>
+
+          <button
+            type="button"
+            className="p-1.5 rounded text-brand-slate hover:bg-brand-hover hover:text-brand-navy transition"
+            title="Settings"
+            onClick={() => setShowSettingsMenu((curr) => !curr)}
+          >
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </button>
+
+          <button
+            type="button"
+            className="flex items-center gap-2 rounded-full hover:ring-2 hover:ring-brand-blue/30 p-0.5 transition"
             title="Profile"
             onClick={() => toggleUtilityPanel('profile')}
           >
-            <span className="grid h-7 w-7 place-items-center rounded-full bg-cyan-500 text-xs font-semibold text-white">{profileInitial}</span>
-            <span className="hidden text-xs leading-tight md:block">
-              <span className="block font-medium text-slate-900">{user?.username || 'User'}</span>
-              <span className="block text-slate-600">{user?.email || 'No email'}</span>
-            </span>
+            <span className="grid h-8 w-8 place-items-center rounded-full bg-brand-blue text-sm font-semibold text-white shadow-sm">{profileInitial}</span>
           </button>
         </div>
       </header>
@@ -1124,43 +1202,56 @@ export default function App() {
       )}
 
       <div className="flex min-h-[calc(100vh-53px)]">
-        <aside className={`hidden border-r border-slate-200 bg-[#f8f9fc] p-3 lg:block ${sidebarCollapsed ? 'w-20' : 'w-[250px]'}`}>
-          <div className="mb-4 flex items-center justify-between">
-            {!sidebarCollapsed && (
-              <div className="rounded-md bg-white px-3 py-2 text-sm font-medium text-slate-900 border border-slate-200">{user.space_name || 'My Workspace'}</div>
-            )}
+        <aside className={`relative border-r border-brand-border bg-brand-gray-light transition-all duration-200 flex flex-col justify-between ${sidebarCollapsed ? 'w-16' : 'w-[240px]'}`}>
+          <div className="p-3">
+            <div className="flex items-center justify-between mb-4 gap-2">
+              {!sidebarCollapsed ? (
+                <div className="flex items-center gap-2.5 px-1">
+                  <div className="h-9 w-9 rounded bg-[#deebff] border border-brand-border flex items-center justify-center font-bold text-brand-blue text-sm shadow-sm">
+                    {selectedProject?.key?.slice(0, 2) || 'DS'}
+                  </div>
+                  <div className="overflow-hidden">
+                    <p className="text-sm font-bold text-brand-navy truncate leading-normal">{selectedProject?.name || 'Design System'}</p>
+                    <p className="text-[10px] font-semibold text-brand-slate uppercase tracking-wider leading-none">Software Project</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="mx-auto h-9 w-9 rounded bg-[#deebff] border border-brand-border flex items-center justify-center font-bold text-brand-blue text-sm shadow-sm" title={selectedProject?.name || 'Project'}>
+                  {selectedProject?.key?.slice(0, 2) || 'DS'}
+                </div>
+              )}
+            </div>
+
             <button
-              className="rounded border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700"
-              onClick={() => setSidebarCollapsed((value) => !value)}
+              onClick={() => setSidebarCollapsed((v) => !v)}
+              className="absolute -right-3 top-12 z-20 bg-white border border-brand-border text-brand-slate hover:text-brand-navy rounded-full h-6 w-6 flex items-center justify-center text-xs shadow-md transition-colors hover:shadow"
+              title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             >
               {sidebarCollapsed ? '»' : '«'}
             </button>
-          </div>
 
-          {!sidebarCollapsed && (
-            <>
-              <div className="mb-4 rounded-lg border border-slate-200 bg-white p-3">
-                <div className="mb-2 flex items-center justify-between gap-2">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-700">For you</p>
+            {!sidebarCollapsed && (
+              <div className="mb-4 rounded-lg border border-brand-border bg-white p-2.5 shadow-xs">
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-brand-slate">Workspace Spaces</span>
                   <button
                     type="button"
-                    className="rounded border border-slate-300 px-2 py-1 text-xs text-slate-700 hover:border-blue-500 hover:text-blue-700"
-                    onClick={() => setShowCreateProjectMenu((value) => !value)}
-                    title="Create project"
+                    className="text-xs text-brand-blue hover:text-brand-blue-hover font-semibold"
+                    onClick={() => setShowCreateProjectMenu((v) => !v)}
+                    title="Add project"
                   >
-                    +
+                    + New
                   </button>
                 </div>
-                <p className="mb-2 text-sm text-slate-500">Projects</p>
+                
                 {showCreateProjectMenu && (
-                  <div className="mb-3 rounded-md border border-slate-300 bg-slate-50 p-2">
-                    <p className="mb-1 text-[11px] uppercase tracking-wide text-slate-700">Templates</p>
-                    <p className="mb-2 text-[11px] text-slate-600">Software Development</p>
+                  <div className="mb-3 rounded border border-brand-border bg-brand-gray-light p-2 space-y-1">
+                    <p className="text-[10px] uppercase font-bold text-brand-slate tracking-wider mb-1.5">Create template</p>
                     {softwareTemplateOptions.map((template) => (
                       <button
                         key={template.id}
                         type="button"
-                        className="mb-1 block w-full rounded border border-slate-300 bg-white px-2 py-1.5 text-left text-xs text-slate-800 hover:border-blue-500"
+                        className="mb-1 block w-full rounded border border-brand-border bg-white px-2 py-1 text-left text-xs text-brand-navy hover:border-brand-blue hover:bg-[#deebff]"
                         onClick={() => openCreateProjectModal(template.id)}
                       >
                         {template.label}
@@ -1168,60 +1259,92 @@ export default function App() {
                     ))}
                   </div>
                 )}
-                <input
-                  className="mb-2 w-full rounded border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-800"
-                  placeholder="Search projects"
-                  value={projectSearch}
-                  onChange={(event) => setProjectSearch(event.target.value)}
-                />
+
                 <button
                   type="button"
-                  className="mb-3 flex w-full items-center justify-between rounded border border-slate-300 bg-white px-3 py-2.5 text-left text-sm text-slate-800"
+                  className="flex w-full items-center justify-between rounded border border-brand-border bg-[#fafbfc] px-2.5 py-1.5 text-left text-xs text-brand-navy hover:border-[#a5adba] transition-colors"
                   onClick={() => setShowProjectPicker(true)}
                 >
-                  <span>{selectedProject ? `${selectedProject.key} - ${selectedProject.name}` : 'Select project'}</span>
+                  <span className="truncate">{selectedProject ? `${selectedProject.key} - ${selectedProject.name}` : 'Select space'}</span>
                   <span className="text-slate-400">▾</span>
                 </button>
-                {deleteProjectMutation.error && (
-                  <p className="mt-2 text-xs text-red-700">{getApiErrorMessage(deleteProjectMutation.error)}</p>
-                )}
-                <button
-                  className="mt-3 w-full rounded-md bg-[#1f5fc3] px-2 py-2 text-sm font-medium text-white"
-                  onClick={() => openCreateProjectModal('scrum')}
-                >
-                  Create project
-                </button>
               </div>
+            )}
 
-              <nav className="space-y-1 text-[15px] text-slate-700">
-                {tabs.map((tab) => (
+            <nav className="space-y-1">
+              {tabs.map((tab) => {
+                const isActive = activeTab === tab.key
+                return (
                   <button
                     key={tab.key}
                     type="button"
-                    className={`block w-full rounded px-3 py-2.5 text-left font-medium ${
-                      activeTab === tab.key ? 'bg-blue-100 text-blue-800' : 'hover:bg-slate-100'
+                    className={`flex items-center gap-3 w-full rounded px-3 py-2 text-left text-sm font-medium transition-colors ${
+                      isActive ? 'bg-[#deebff] text-brand-blue font-bold border-l-[3px] border-brand-blue shadow-sm' : 'text-brand-slate hover:bg-brand-hover hover:text-brand-navy'
                     }`}
                     onClick={() => setActiveTab(tab.key)}
+                    title={tab.label}
                   >
-                    {tab.label}
+                    <span className={`flex-shrink-0 ${isActive ? 'text-brand-blue' : 'text-brand-slate'}`}>
+                      {tab.key === 'summary' && (
+                        <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2" />
+                        </svg>
+                      )}
+                      {tab.key === 'timeline' && (
+                        <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                      )}
+                      {tab.key === 'sprints' && (
+                        <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
+                        </svg>
+                      )}
+                      {tab.key === 'board' && (
+                        <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+                        </svg>
+                      )}
+                      {tab.key === 'calendar' && (
+                        <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      )}
+                      {tab.key === 'list' && (
+                        <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                        </svg>
+                      )}
+                      {tab.key === 'backlog' && (
+                        <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                        </svg>
+                      )}
+                    </span>
+                    {!sidebarCollapsed && <span className="font-semibold text-[13px]">{tab.label}</span>}
                   </button>
-                ))}
-              </nav>
+                )
+              })}
+            </nav>
+          </div>
 
-              <button
-                type="button"
-                className="mt-2 block w-full rounded px-3 py-2.5 text-left text-[15px] font-medium text-slate-700 hover:bg-slate-100"
-                onClick={() => {
-                  setInviteProjectId(selectedProjectId || projects[0]?.id || '')
-                  setInviteRole('')
-                  setShowInviteModal(true)
-                }}
-              >
-                Invite
-              </button>
-
-            </>
-          )}
+          <div className="p-3 border-t border-brand-border">
+            <button
+              type="button"
+              className={`flex items-center gap-3 w-full rounded px-3 py-2 text-left text-sm font-medium transition-colors text-brand-slate hover:bg-brand-hover hover:text-brand-navy`}
+              onClick={() => {
+                setInviteProjectId(selectedProjectId || projects[0]?.id || '')
+                setInviteRole('')
+                setShowInviteModal(true)
+              }}
+              title="Invite members"
+            >
+              <svg className="h-4.5 w-4.5 text-brand-slate" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+              </svg>
+              {!sidebarCollapsed && <span className="font-semibold text-[13px]">Invite members</span>}
+            </button>
+          </div>
         </aside>
 
         {showProjectPicker && (
@@ -1465,17 +1588,17 @@ export default function App() {
                 </div>
               </div>
 
-              <p className="mb-4 text-sm text-slate-300">
+              <p className="mb-4 text-sm text-brand-slate">
                 Create tasks with Start date and Due date to view duration bars across months. Overlapping bars help plan workload.
               </p>
 
               <div className="overflow-x-auto">
                 <div className="min-w-[840px]">
                   <div className="mb-2 grid grid-cols-[220px_1fr] gap-2">
-                    <div className="text-xs font-semibold uppercase tracking-wide text-slate-100">Work</div>
+                    <div className="text-xs font-bold uppercase tracking-wide text-brand-navy">Work</div>
                     <div className="grid gap-1" style={{ gridTemplateColumns: `repeat(${timelineMonths.length}, minmax(0, 1fr))` }}>
                       {timelineMonths.map((month) => (
-                        <div key={month.key} className="rounded border border-slate-500 bg-[#111827] px-2 py-1 text-center text-xs font-semibold text-white shadow-sm">
+                        <div key={month.key} className="rounded border border-brand-border bg-brand-gray-light px-2 py-1 text-center text-xs font-semibold text-brand-navy shadow-sm">
                           {month.label}
                         </div>
                       ))}
@@ -1484,33 +1607,33 @@ export default function App() {
 
                   <div className="space-y-2">
                     {timelineRows.length === 0 && (
-                      <p className="rounded border border-slate-300 bg-slate-50 p-3 text-sm text-slate-700">No work items available.</p>
+                      <p className="rounded border border-brand-border bg-brand-gray-light p-3 text-sm text-brand-slate">No work items available.</p>
                     )}
 
                     {timelineRows.map(({ issue, bar }) => (
                       <div key={issue.id} className="grid grid-cols-[220px_1fr] items-center gap-2">
-                        <div className="truncate rounded border border-slate-500 bg-[#111827] px-2 py-2 text-xs font-medium text-white">
+                        <div className="truncate rounded border border-brand-border bg-brand-gray-light px-2 py-2 text-xs font-semibold text-brand-navy">
                           {issue.issue_key} - {issue.title}
                         </div>
-                        <div className="relative h-9 rounded border border-slate-500 bg-[#0f172a]">
+                        <div className="relative h-9 rounded border border-brand-border bg-white">
                           <div
                             className="absolute inset-0 grid"
                             style={{ gridTemplateColumns: `repeat(${timelineMonths.length}, minmax(0, 1fr))` }}
                           >
                             {timelineMonths.map((month) => (
-                              <div key={`${issue.id}-${month.key}`} className="border-r border-slate-500/60 last:border-r-0" />
+                              <div key={`${issue.id}-${month.key}`} className="border-r border-brand-border/40 last:border-r-0" />
                             ))}
                           </div>
                           {bar ? (
                             <div
-                              className="absolute top-1 h-7 rounded-md bg-blue-500 px-2 text-[11px] font-semibold leading-7 text-white shadow-[0_0_0_1px_rgba(147,197,253,0.35)]"
+                              className="absolute top-1 h-7 rounded-md bg-brand-blue px-2 text-[11px] font-semibold leading-7 text-white shadow-sm"
                               style={{ left: `${bar.left}%`, width: `${Math.max(2, bar.width)}%` }}
                               title={`${bar.startDate.toLocaleDateString()} - ${bar.dueDate.toLocaleDateString()}`}
                             >
                               {issue.issue_key}
                             </div>
                           ) : (
-                            <div className="absolute inset-0 grid place-items-center text-[11px] font-medium text-slate-300">Missing start or due date</div>
+                            <div className="absolute inset-0 grid place-items-center text-[11px] font-medium text-slate-400">Missing start or due date</div>
                           )}
                         </div>
                       </div>
@@ -1696,7 +1819,7 @@ export default function App() {
           {!showNewDashboard && activeTab === 'sprints' && (
             <SprintsPage selectedProjectId={selectedProjectId} />
           )}
-          {!showNewDashboard && activeTab === 'backlog' && <BacklogPage selectedProjectId={selectedProjectId} onOpenIssue={openIssue} />}
+          {!showNewDashboard && activeTab === 'backlog' && <BacklogPage selectedProjectId={selectedProjectId} onOpenIssue={openIssue} projectMembers={projectMembers} />}
           {!showNewDashboard && activeTab === 'board' && (
             <BoardPage
               selectedProjectId={selectedProjectId}
@@ -1706,6 +1829,7 @@ export default function App() {
               onGoBacklog={() => setActiveTab('backlog')}
               onBoardModeChange={setCurrentBoardMode}
               currentProjectRole={currentProjectRole}
+              projectMembers={projectMembers}
             />
           )}
         </main>
@@ -1713,52 +1837,52 @@ export default function App() {
 
       {showCreateProjectModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 py-6">
-          <div className="w-full max-w-xl rounded-xl border border-slate-300 bg-white p-5 text-slate-900 shadow-2xl">
-            <div className="mb-4 flex items-start justify-between gap-3 border-b border-slate-200 pb-3">
+          <div className="w-full max-w-xl rounded-xl border border-brand-border bg-white p-5 text-brand-navy shadow-2xl">
+            <div className="mb-4 flex items-start justify-between gap-3 border-b border-brand-border pb-3">
               <div>
-                <h2 className="text-lg font-semibold">Create Project</h2>
-                <p className="text-xs text-slate-600">Domain templates with Software Development support.</p>
+                <h2 className="text-lg font-semibold text-brand-navy">Create Project</h2>
+                <p className="text-xs text-brand-slate">Domain templates with Software Development support.</p>
               </div>
               <button
                 type="button"
-                className="rounded border border-slate-300 bg-white px-3 py-1 text-sm text-slate-700"
+                className="rounded border border-brand-border bg-white px-3 py-1 text-sm text-brand-slate hover:bg-brand-hover hover:text-brand-navy"
                 onClick={() => setShowCreateProjectModal(false)}
               >
                 Close
               </button>
             </div>
 
-            <div className="mb-4 rounded-lg border border-slate-300 bg-slate-50 p-3 text-xs">
-              <p className="mb-2 uppercase tracking-wide text-slate-700">Domains</p>
+            <div className="mb-4 rounded-lg border border-brand-border bg-brand-gray-light p-3 text-xs">
+              <p className="mb-2 uppercase tracking-wide text-brand-slate font-bold">Domains</p>
               <div className="grid gap-2 sm:grid-cols-3">
-                <div className="rounded border border-blue-300 bg-blue-50 px-2 py-1.5 text-blue-700">Software Development</div>
-                <div className="rounded border border-slate-300 px-2 py-1.5 text-slate-600">Business (soon)</div>
-                <div className="rounded border border-slate-300 px-2 py-1.5 text-slate-600">Marketing (soon)</div>
+                <div className="rounded border border-[#b3d4ff] bg-[#deebff] px-2 py-1.5 text-brand-blue font-bold">Software Development</div>
+                <div className="rounded border border-brand-border bg-white px-2 py-1.5 text-brand-slate">Business (soon)</div>
+                <div className="rounded border border-brand-border bg-white px-2 py-1.5 text-brand-slate">Marketing (soon)</div>
               </div>
             </div>
 
             <form className="space-y-3" onSubmit={submitCreateProject}>
               <div>
-                <label className="mb-1 block text-xs uppercase tracking-wide text-slate-700">Template (Software Development)</label>
+                <label className="mb-1 block text-xs uppercase tracking-wide text-brand-slate font-bold">Template (Software Development)</label>
                 <div className="grid gap-2 sm:grid-cols-2">
                   {softwareTemplateOptions.map((template) => (
                     <button
                       key={template.id}
                       type="button"
-                      className={`rounded border px-3 py-2 text-left ${selectedProjectTemplate === template.id ? 'border-blue-500 bg-blue-50' : 'border-slate-300 bg-white'}`}
+                      className={`rounded border px-3 py-2 text-left ${selectedProjectTemplate === template.id ? 'border-brand-blue bg-[#deebff]' : 'border-brand-border bg-white'}`}
                       onClick={() => setSelectedProjectTemplate(template.id)}
                     >
-                      <p className="text-sm font-medium text-slate-900">{template.label}</p>
-                      <p className="text-xs text-slate-600">{template.description}</p>
+                      <p className="text-sm font-semibold text-brand-navy">{template.label}</p>
+                      <p className="text-xs text-brand-slate">{template.description}</p>
                     </button>
                   ))}
                 </div>
               </div>
 
               <div>
-                <label className="mb-1 block text-xs uppercase tracking-wide text-slate-700">Project Name</label>
+                <label className="mb-1 block text-xs uppercase tracking-wide text-brand-slate font-bold">Project Name</label>
                 <input
-                  className="w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm"
+                  className="w-full input-text"
                   value={projectForm.name}
                   onChange={(event) => setProjectForm((current) => ({ ...current, name: event.target.value }))}
                   required
@@ -1767,17 +1891,17 @@ export default function App() {
 
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
-                  <label className="mb-1 block text-xs uppercase tracking-wide text-slate-700">Project Key (optional)</label>
+                  <label className="mb-1 block text-xs uppercase tracking-wide text-brand-slate font-bold">Project Key (optional)</label>
                   <input
-                    className="w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm uppercase"
+                    className="w-full input-text uppercase"
                     value={projectForm.key}
                     onChange={(event) => setProjectForm((current) => ({ ...current, key: event.target.value.toUpperCase() }))}
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs uppercase tracking-wide text-slate-700">Lead (optional)</label>
+                  <label className="mb-1 block text-xs uppercase tracking-wide text-brand-slate font-bold">Lead (optional)</label>
                   <input
-                    className="w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm"
+                    className="w-full input-text"
                     value={projectForm.lead}
                     onChange={(event) => setProjectForm((current) => ({ ...current, lead: event.target.value }))}
                   />
@@ -1785,32 +1909,32 @@ export default function App() {
               </div>
 
               <div>
-                <label className="mb-1 block text-xs uppercase tracking-wide text-slate-700">Description</label>
+                <label className="mb-1 block text-xs uppercase tracking-wide text-brand-slate font-bold">Description</label>
                 <textarea
                   rows={3}
-                  className="w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm"
+                  className="w-full input-text"
                   value={projectForm.description}
                   onChange={(event) => setProjectForm((current) => ({ ...current, description: event.target.value }))}
                 />
               </div>
 
               {createProjectMutation.error && (
-                <p className="rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
+                <p className="rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
                   {getApiErrorMessage(createProjectMutation.error)}
                 </p>
               )}
 
-              <div className="flex items-center justify-end gap-2 border-t border-slate-200 pt-3">
+              <div className="flex items-center justify-end gap-2 border-t border-brand-border pt-3">
                 <button
                   type="button"
-                  className="rounded border border-slate-300 bg-white px-4 py-2 text-sm text-slate-700"
+                  className="btn-secondary"
                   onClick={() => setShowCreateProjectModal(false)}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+                  className="btn-primary"
                   disabled={createProjectMutation.isPending}
                 >
                   {createProjectMutation.isPending ? 'Creating...' : 'Create Project'}
@@ -1823,75 +1947,88 @@ export default function App() {
 
       {showInviteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 py-6">
-          <div className="w-full max-w-lg rounded-xl border border-slate-300 bg-white p-5 text-slate-900 shadow-2xl">
-            <div className="mb-4 flex items-start justify-between gap-3 border-b border-slate-200 pb-3">
+          <div className="w-full max-w-lg rounded-xl border border-brand-border bg-white p-6 text-brand-navy shadow-2xl">
+            <div className="mb-5 flex items-center justify-between border-b border-brand-border pb-3">
               <div>
-                <h2 className="text-lg font-semibold">Invite Member</h2>
-                <p className="text-xs text-slate-600">Send project invite via Gmail with accept/reject links.</p>
+                <h2 className="text-lg font-bold text-brand-navy">Invite Team Member</h2>
+                <p className="text-xs text-brand-slate">Collaborators will receive a project invitation link via Gmail.</p>
               </div>
               <button
                 type="button"
-                className="rounded border border-slate-300 bg-white px-3 py-1 text-sm text-slate-700"
+                className="rounded-md border border-brand-border bg-white px-3 py-1 text-sm text-brand-slate hover:bg-brand-hover hover:text-brand-navy"
                 onClick={() => setShowInviteModal(false)}
               >
-                Close
+                ✕
               </button>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-4">
               <div>
-                <label className="mb-1 block text-xs uppercase tracking-wide text-slate-700">Invitee Email</label>
+                <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-brand-slate">Invitee Email</label>
                 <input
-                  className="w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm"
+                  className="w-full input-text py-2"
                   value={inviteEmail}
                   onChange={(event) => setInviteEmail(event.target.value)}
-                  placeholder="name@gmail.com"
+                  placeholder="e.g. developer@company.com"
                 />
               </div>
 
               <div>
-                <label className="mb-1 block text-xs uppercase tracking-wide text-slate-700">Project</label>
+                <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-brand-slate">Project Workspace</label>
                 <select
-                  className="w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm"
+                  className="w-full input-text py-2"
                   value={inviteProjectId}
                   onChange={(event) => setInviteProjectId(event.target.value)}
                 >
-                  <option value="">Select project</option>
+                  <option value="" className="bg-white text-slate-400">Select project</option>
                   {projects.map((project) => (
-                    <option key={project.id} value={project.id}>{project.name}</option>
+                    <option key={project.id} value={project.id} className="bg-white text-brand-navy">{project.name}</option>
                   ))}
                 </select>
               </div>
 
               <div>
-                <label className="mb-1 block text-xs uppercase tracking-wide text-slate-700">Role</label>
+                <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-brand-slate">Project Role</label>
                 <select
-                  className="w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm"
+                  className="w-full input-text py-2"
                   value={inviteRole}
                   onChange={(event) => setInviteRole(event.target.value)}
                 >
-                  <option value="">Select role</option>
-                  <option value="restricted">Restricted (view, comment, limited transitions)</option>
-                  <option value="viewer">Viewer (view and comment)</option>
-                  <option value="developer">Developer</option>
+                  <option value="" className="bg-white text-slate-400">Select role</option>
+                  <option value="restricted" className="bg-white text-brand-navy">Restricted (view, comment, limited transitions)</option>
+                  <option value="viewer" className="bg-white text-brand-navy">Viewer (read-only and comment)</option>
+                  <option value="developer" className="bg-white text-brand-navy">Developer (full transition and issue access)</option>
                 </select>
               </div>
 
-              <button
-                type="button"
-                className="w-full rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white"
-                disabled={!inviteEmail.trim() || !inviteProjectId || !inviteRole || inviteMemberMutation.isPending}
-                onClick={() => inviteMemberMutation.mutate({ projectId: inviteProjectId, email: inviteEmail.trim(), role: inviteRole })}
-              >
-                {inviteMemberMutation.isPending ? 'Sending invite...' : 'Send Invite'}
-              </button>
-
-              {inviteMemberMutation.error && <p className="text-sm text-red-600">{getApiErrorMessage(inviteMemberMutation.error)}</p>}
+              {inviteMemberMutation.error && (
+                <p className="text-xs font-medium text-rose-800 p-2.5 rounded-lg border border-rose-200 bg-rose-50">
+                  {getApiErrorMessage(inviteMemberMutation.error)}
+                </p>
+              )}
               {inviteMemberMutation.data && (
-                <p className="text-sm text-emerald-700">
+                <p className="text-xs font-medium text-emerald-800 p-2.5 rounded-lg border border-emerald-200 bg-emerald-50">
                   {inviteMemberMutation.data.already_member ? 'User is already in this project.' : 'Invitation email sent successfully.'}
                 </p>
               )}
+
+              <div className="flex items-center justify-end gap-2.5 border-t border-brand-border pt-4 mt-2">
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => setShowInviteModal(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="btn-primary"
+                  disabled={!inviteEmail.trim() || !inviteProjectId || !inviteRole || inviteMemberMutation.isPending}
+                  onClick={() => inviteMemberMutation.mutate({ projectId: inviteProjectId, email: inviteEmail.trim(), role: inviteRole })}
+                >
+                  {inviteMemberMutation.isPending ? 'Sending...' : 'Send Invitation'}
+                </button>
+              </div>
             </div>
           </div>
         </div>

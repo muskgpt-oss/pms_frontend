@@ -2,6 +2,27 @@ import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createEpic, createSprint, fetchSprintHierarchy, fetchSprints, includeEpicInSprint } from '../../services/projectApi'
 import { getApiErrorMessage } from '../../services/apiClient'
+import IssueTypeBadge from '../../components/IssueTypeBadge'
+
+// Reusable status badge helper
+const StatusBadge = ({ status }) => {
+  const normalized = String(status || '').trim().toLowerCase()
+  let style = 'bg-brand-hover border-brand-border text-brand-slate'
+  
+  if (['todo', 'to_do', 'backlog'].includes(normalized)) {
+    style = 'bg-gray-100 border-gray-200 text-brand-slate'
+  } else if (['in_progress', 'doing', 'in_review', 'review', 'qa', 'testing'].includes(normalized)) {
+    style = 'bg-blue-50 border-blue-200 text-brand-blue'
+  } else if (['done', 'completed', 'closed'].includes(normalized)) {
+    style = 'bg-green-50 border-green-200 text-green-700'
+  }
+  
+  return (
+    <span className={`inline-flex items-center rounded border px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${style}`}>
+      {status}
+    </span>
+  )
+}
 
 export default function SprintsPage({ selectedProjectId }) {
   const queryClient = useQueryClient()
@@ -64,36 +85,60 @@ export default function SprintsPage({ selectedProjectId }) {
     setSelection((current) => {
       const next = { ...current }
       const epicSelection = { ...(next[epicId] || { tasks: {}, subtasks: {} }) }
-      const target = { ...epicSelection[key], [value]: !epicSelection[key]?.[value] }
-      epicSelection[key] = target
+      epicSelection[key] = {
+        ...(epicSelection[key] || {}),
+        [value]: !epicSelection[key]?.[value],
+      }
       next[epicId] = epicSelection
       return next
     })
   }
 
   if (!selectedProjectId) {
-    return <p className="rounded-lg border border-slate-300 bg-white p-4 text-sm text-slate-700">Select a project first.</p>
+    return (
+      <div className="rounded border border-brand-border bg-white p-6 text-center shadow-sm max-w-md mx-auto mt-8">
+        <svg className="w-12 h-12 text-brand-slate mx-auto mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <circle cx="12" cy="12" r="10" />
+          <path d="M8 12h8m-4-4v8" />
+        </svg>
+        <h3 className="text-sm font-bold text-brand-navy">No Project Selected</h3>
+        <p className="mt-1.5 text-xs text-brand-slate leading-relaxed">
+          Please pick a project from the workspace sidebar navigation to manage and plan sprints.
+        </p>
+      </div>
+    )
   }
 
   return (
-    <div className="space-y-4">
-      <div className="rounded-lg border border-slate-300 bg-white p-4">
-        <h2 className="text-lg font-semibold text-slate-900">Sprint</h2>
-        <p className="mt-1 text-sm text-slate-600">Sprint → Epic → Task → Subtask hierarchy with selective inclusion.</p>
+    <div className="space-y-6">
+      {/* Configuration Panel */}
+      <div className="rounded border border-brand-border bg-white p-5 shadow-sm">
+        <div className="flex items-center gap-3 border-b border-brand-border pb-3.5 mb-4">
+          <div className="w-9 h-9 rounded bg-purple-50 border border-purple-200 flex items-center justify-center text-purple-650">
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+            </svg>
+          </div>
+          <div>
+            <h2 className="text-sm font-bold text-brand-navy">Sprint & Epic Scope Planning</h2>
+            <p className="text-xs text-brand-slate mt-0.5">Link and allocate tasks/subtasks of epics to planned or active sprints.</p>
+          </div>
+        </div>
 
-        <div className="mt-4 grid gap-3 lg:grid-cols-3">
+        <div className="grid gap-5 md:grid-cols-3">
+          {/* Create Sprint */}
           <div className="space-y-2">
-            <label className="text-xs font-semibold uppercase tracking-wide text-slate-600">Create Sprint</label>
+            <label className="text-[10px] font-bold uppercase tracking-wider text-brand-slate">Create Sprint</label>
             <div className="flex gap-2">
               <input
-                className="w-full rounded border border-slate-300 px-3 py-2 text-sm"
+                className="w-full input-text"
                 value={newSprintName}
                 onChange={(event) => setNewSprintName(event.target.value)}
-                placeholder="Sprint name"
+                placeholder="e.g. Sprint 3"
               />
               <button
                 type="button"
-                className="rounded bg-slate-900 px-3 py-2 text-xs font-medium text-white"
+                className="btn-primary text-xs font-bold px-4 py-2 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={() => createSprintMutation.mutate({ projectId: selectedProjectId, payload: { name: newSprintName, goal: '' } })}
                 disabled={!newSprintName.trim() || createSprintMutation.isPending}
               >
@@ -102,74 +147,110 @@ export default function SprintsPage({ selectedProjectId }) {
             </div>
           </div>
 
+          {/* Create Epic */}
           <div className="space-y-2">
-            <label className="text-xs font-semibold uppercase tracking-wide text-slate-600">Create Epic</label>
+            <label className="text-[10px] font-bold uppercase tracking-wider text-brand-slate">Create Epic</label>
             <div className="flex gap-2">
               <input
-                className="w-full rounded border border-slate-300 px-3 py-2 text-sm"
+                className="w-full input-text"
                 value={newEpicTitle}
                 onChange={(event) => setNewEpicTitle(event.target.value)}
-                placeholder="Epic title"
+                placeholder="e.g. User Authentication"
               />
               <button
                 type="button"
-                className="rounded bg-blue-600 px-3 py-2 text-xs font-medium text-white"
+                className="rounded bg-purple-650 hover:bg-purple-700 text-xs font-bold text-white px-4 py-2 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={() => createEpicMutation.mutate({ projectId: selectedProjectId, payload: { title: newEpicTitle } })}
                 disabled={!newEpicTitle.trim() || createEpicMutation.isPending}
               >
-                Add Epic
+                Add
               </button>
             </div>
           </div>
 
+          {/* Target Sprint Dropdown */}
           <div className="space-y-2">
-            <label className="text-xs font-semibold uppercase tracking-wide text-slate-600">Target Sprint</label>
+            <label className="text-[10px] font-bold uppercase tracking-wider text-brand-slate">Target Sprint</label>
             <select
-              className="w-full rounded border border-slate-300 px-3 py-2 text-sm"
+              className="w-full input-text cursor-pointer"
               value={activeSprintId}
               onChange={(event) => setSelectedSprintId(event.target.value)}
             >
-              <option value="">Select sprint</option>
+              <option value="">Select Target Sprint</option>
               {sprints.map((sprint) => (
-                <option key={sprint.id} value={sprint.id}>{sprint.name} ({sprint.state})</option>
+                <option key={sprint.id} value={sprint.id}>
+                  {sprint.name} ({sprint.state})
+                </option>
               ))}
             </select>
           </div>
         </div>
       </div>
 
-      {error && <p className="text-sm text-red-600">{getApiErrorMessage(error)}</p>}
+      {error && (
+        <div className="rounded border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-600 font-medium">
+          {getApiErrorMessage(error)}
+        </div>
+      )}
 
-      <div className="rounded-lg border border-slate-300 bg-white p-4">
-        <h3 className="text-base font-semibold text-slate-900">Hierarchy Selection</h3>
-        {isLoading && <p className="mt-3 text-sm text-slate-600">Loading hierarchy...</p>}
-
-        {!isLoading && (hierarchy?.epics || []).length === 0 && (
-          <p className="mt-3 text-sm text-slate-600">No epics available yet.</p>
+      {/* Hierarchy Section */}
+      <div className="rounded border border-brand-border bg-white p-5 shadow-sm">
+        <h3 className="text-sm font-bold text-brand-navy border-b border-brand-border pb-3 mb-4">Epic Scope Hierarchy</h3>
+        
+        {isLoading && (
+          <p className="text-center text-xs text-brand-slate py-12">Loading project scope...</p>
         )}
 
-        <div className="mt-3 space-y-3">
+        {!isLoading && (hierarchy?.epics || []).length === 0 && (
+          <div className="text-center py-12 border border-dashed border-brand-border rounded">
+            <p className="text-xs text-brand-slate">No epics exist inside this project.</p>
+          </div>
+        )}
+
+        <div className="space-y-4">
           {(hierarchy?.epics || []).map((epic) => {
+            const isEpicExpanded = expandedEpicIds[epic.id]
             const epicSelection = selection[epic.id] || { tasks: {}, subtasks: {} }
             const selectedTaskIds = Object.entries(epicSelection.tasks).filter(([, checked]) => checked).map(([taskId]) => taskId)
             const selectedSubtaskIds = Object.entries(epicSelection.subtasks).filter(([, checked]) => checked).map(([subtaskId]) => subtaskId)
 
             return (
-              <div key={epic.id} className="rounded border border-slate-200">
-                <div className="flex flex-wrap items-center justify-between gap-2 bg-slate-50 px-3 py-2">
-                  <button
-                    type="button"
-                    className="text-left text-sm font-semibold text-slate-900"
-                    onClick={() => toggleEpicExpanded(epic.id)}
-                  >
-                    {expandedEpicIds[epic.id] ? '▾' : '▸'} {epic.title} ({epic.status})
-                    {epic.included_in_sprint && <span className="ml-2 rounded bg-emerald-100 px-2 py-0.5 text-[10px] text-emerald-700">Included</span>}
-                  </button>
+              <div key={epic.id} className="rounded border border-brand-border overflow-hidden bg-brand-gray-light/20">
+                {/* Epic Node Row */}
+                <div className="flex flex-wrap items-center justify-between gap-3 bg-brand-gray-light px-4 py-3 border-b border-brand-border">
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      className="p-1 rounded text-brand-slate hover:bg-brand-hover hover:text-brand-navy transition-colors cursor-pointer"
+                      onClick={() => toggleEpicExpanded(epic.id)}
+                    >
+                      <svg
+                        className={`w-3.5 h-3.5 transform transition-transform ${isEpicExpanded ? 'rotate-90' : ''}`}
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                      >
+                        <polyline points="9 18 15 12 9 6" />
+                      </svg>
+                    </button>
+                    
+                    <div className="flex items-center gap-2">
+                      <IssueTypeBadge type="epic" showText={false} />
+                      <span className="text-xs font-bold text-brand-navy">{epic.title}</span>
+                      <StatusBadge status={epic.status} />
+                      {epic.included_in_sprint && (
+                        <span className="rounded bg-green-50 border border-green-200 text-green-700 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider">
+                          In Sprint
+                        </span>
+                      )}
+                    </div>
+                  </div>
 
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
-                      className="rounded bg-slate-900 px-3 py-1.5 text-xs font-medium text-white"
+                      className="btn-secondary text-[10px] font-bold px-3 py-1.5 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                       disabled={!activeSprintId || includeMutation.isPending}
                       onClick={() => includeMutation.mutate({
                         projectId: selectedProjectId,
@@ -182,7 +263,7 @@ export default function SprintsPage({ selectedProjectId }) {
                     </button>
                     <button
                       type="button"
-                      className="rounded border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700"
+                      className="btn-secondary text-[10px] font-bold px-3 py-1.5 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                       disabled={!activeSprintId || includeMutation.isPending || (selectedTaskIds.length === 0 && selectedSubtaskIds.length === 0)}
                       onClick={() => includeMutation.mutate({
                         projectId: selectedProjectId,
@@ -196,37 +277,69 @@ export default function SprintsPage({ selectedProjectId }) {
                   </div>
                 </div>
 
-                {expandedEpicIds[epic.id] && (
-                  <div className="space-y-2 px-4 py-3">
-                    {epic.tasks.length === 0 && <p className="text-xs text-slate-600">No tasks linked to this epic yet.</p>}
+                {/* Indented tasks tree section */}
+                {isEpicExpanded && (
+                  <div className="px-4 py-3.5 space-y-3.5 bg-white">
+                    {epic.tasks.length === 0 && (
+                      <p className="text-center text-xs text-brand-slate py-3">No tasks link to this epic.</p>
+                    )}
 
-                    {epic.tasks.map((task) => (
-                      <div key={task.id} className="rounded border border-slate-200 p-2">
-                        <label className="flex items-center gap-2 text-sm text-slate-800">
-                          <input
-                            type="checkbox"
-                            checked={Boolean(epicSelection.tasks[task.id])}
-                            onChange={() => toggleSelection(epic.id, 'tasks', task.id)}
-                          />
-                          Task: {task.title} ({task.status})
-                          {task.included_in_sprint && <span className="rounded bg-emerald-100 px-2 py-0.5 text-[10px] text-emerald-700">Included</span>}
-                        </label>
-
-                        <div className="ml-6 mt-2 space-y-1">
-                          {task.subtasks.map((subtask) => (
-                            <label key={subtask.id} className="flex items-center gap-2 text-xs text-slate-700">
+                    {epic.tasks.map((task) => {
+                      const hasSubtasks = task.subtasks && task.subtasks.length > 0
+                      return (
+                        <div key={task.id} className="space-y-2">
+                          {/* Task Node */}
+                          <div className="flex items-center justify-between gap-3 p-2.5 rounded border border-brand-border hover:bg-brand-hover transition-colors">
+                            <label className="flex items-center gap-3 text-xs text-brand-navy font-medium cursor-pointer">
                               <input
                                 type="checkbox"
-                                checked={Boolean(epicSelection.subtasks[subtask.id])}
-                                onChange={() => toggleSelection(epic.id, 'subtasks', subtask.id)}
+                                className="w-3.5 h-3.5 rounded border-brand-border bg-white text-brand-blue focus:ring-brand-blue cursor-pointer"
+                                  checked={Boolean(epicSelection.tasks[task.id])}
+                                  onChange={() => toggleSelection(epic.id, 'tasks', task.id)}
                               />
-                              Subtask: {subtask.title} ({subtask.status})
-                              {subtask.included_in_sprint && <span className="rounded bg-emerald-100 px-2 py-0.5 text-[10px] text-emerald-700">Included</span>}
+                              <div className="flex items-center gap-2">
+                                <IssueTypeBadge type={task.work_type} showText={false} />
+                                <span>{task.title}</span>
+                                <StatusBadge status={task.status} />
+                                {task.included_in_sprint && (
+                                  <span className="rounded bg-green-50 border border-green-200 text-green-700 px-1.5 py-0.5 text-[8px] font-bold uppercase select-none">
+                                    In Sprint
+                                  </span>
+                                )}
+                              </div>
                             </label>
-                          ))}
+                          </div>
+
+                          {/* Subtask nested node under parent task */}
+                          {hasSubtasks && (
+                            <div className="pl-6 ml-4 border-l-2 border-brand-border space-y-2 pt-1.5 pb-0.5">
+                              {task.subtasks.map((subtask) => (
+                                <div key={subtask.id} className="flex items-center justify-between gap-3 p-2 rounded border border-brand-border bg-brand-gray-light/30 hover:bg-brand-hover transition-colors relative before:absolute before:left-[-16px] before:top-[16px] before:w-[12px] before:h-0.5 before:bg-brand-border">
+                                  <label className="flex items-center gap-3 text-[11px] text-brand-slate font-medium cursor-pointer">
+                                    <input
+                                      type="checkbox"
+                                      className="w-3 h-3 rounded border-brand-border bg-white text-brand-blue focus:ring-brand-blue cursor-pointer"
+                                      checked={Boolean(epicSelection.subtasks[subtask.id])}
+                                      onChange={() => toggleSelection(epic.id, 'subtasks', subtask.id)}
+                                    />
+                                    <div className="flex items-center gap-2">
+                                      <IssueTypeBadge type="subtask" showText={false} />
+                                      <span>{subtask.title}</span>
+                                      <StatusBadge status={subtask.status} />
+                                      {subtask.included_in_sprint && (
+                                        <span className="rounded bg-green-50 border border-green-100 text-green-700 px-1.5 py-0.2 text-[8px] font-bold uppercase select-none">
+                                          In Sprint
+                                        </span>
+                                      )}
+                                    </div>
+                                  </label>
+                                </div>
+                              ))}
+                            </div>
+                          )}
                         </div>
-                      </div>
-                    ))}
+                      )
+                    })}
                   </div>
                 )}
               </div>
@@ -234,9 +347,18 @@ export default function SprintsPage({ selectedProjectId }) {
           })}
         </div>
 
-        {includeMutation.error && <p className="mt-3 text-sm text-red-600">{getApiErrorMessage(includeMutation.error)}</p>}
-        {includeMutation.data && <p className="mt-3 text-sm text-emerald-700">{includeMutation.data.comment}</p>}
+        {includeMutation.error && (
+          <p className="mt-4 text-xs font-semibold text-red-600 font-medium">
+            {getApiErrorMessage(includeMutation.error)}
+          </p>
+        )}
+        {includeMutation.data && (
+          <div className="mt-4 p-3 rounded bg-green-50 border border-green-200 text-xs font-semibold text-green-700">
+            {includeMutation.data.comment}
+          </div>
+        )}
       </div>
     </div>
   )
 }
+
