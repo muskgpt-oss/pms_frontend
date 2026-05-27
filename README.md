@@ -2,6 +2,11 @@
 
 Initial full-stack PoC for a small Jira-like project management system.
 
+## Team Member
+- Muskaan Gupta 
+- Muskan Kumari
+- Muskan Kulria
+
 ## Stack
 - Backend: FastAPI + MongoDB (Motor)
 - Frontend: React + Axios + TanStack Query + Tailwind CSS
@@ -113,3 +118,7 @@ Or update `backend/.env` values for your MongoDB deployment.
 2. Create sprints and issues in the `Backlog` tab.
 3. Start a sprint from backlog.
 4. Move issues across board columns in the `Board` tab.
+
+##Screenshots
+<img width="1470" height="797" alt="Screenshot 2026-05-28 at 2 11 49 AM" src="https://github.com/user-attachments/assets/703b7daa-04ef-47f2-8040-057542d6c5bf" />
+
