@@ -296,27 +296,29 @@ export default function BacklogPage({ selectedProjectId, onOpenIssue }) {
       <div className="space-y-4">
         
         {/* Create Sprint quick block */}
-        <div className="flex items-center justify-between gap-4 rounded border border-brand-border bg-white p-4 shadow-sm">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-bold text-brand-navy">Sprint Planner</span>
+        {sprints.length === 0 && (
+          <div className="flex items-center justify-between gap-4 rounded border border-brand-border bg-white p-4 shadow-sm">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-bold text-brand-navy">Sprint Planner</span>
+            </div>
+            
+            <div className="flex items-center gap-2.5">
+              <input
+                className="input-text py-1.5 px-3 text-xs w-40"
+                value={newSprintName}
+                onChange={(event) => setNewSprintName(event.target.value)}
+                placeholder="e.g. Sprint 3"
+              />
+              <button
+                className="btn-primary py-1.5 px-4 text-xs font-semibold"
+                onClick={createSprintQuick}
+                disabled={createSprintMutation.isPending || !newSprintName.trim()}
+              >
+                {createSprintMutation.isPending ? 'Adding...' : 'Create Sprint'}
+              </button>
+            </div>
           </div>
-          
-          <div className="flex items-center gap-2.5">
-            <input
-              className="input-text py-1.5 px-3 text-xs w-40"
-              value={newSprintName}
-              onChange={(event) => setNewSprintName(event.target.value)}
-              placeholder="e.g. Sprint 3"
-            />
-            <button
-              className="btn-primary py-1.5 px-4 text-xs font-semibold"
-              onClick={createSprintQuick}
-              disabled={createSprintMutation.isPending || !newSprintName.trim()}
-            >
-              {createSprintMutation.isPending ? 'Adding...' : 'Create Sprint'}
-            </button>
-          </div>
-        </div>
+        )}
 
         {/* Sprint Lists */}
         <div className="space-y-4">

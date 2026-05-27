@@ -694,8 +694,8 @@ export default function AuthOnboardingFlow({ onAuthenticated, initialMode = 'sig
                     </span>
                     <span className={`inline-block h-4 w-4 rounded-full border ${selected ? 'border-pink-600 bg-pink-600' : 'border-pink-300'}`} />
                   </div>
-                  <h3 className={`text-2xl font-semibold ${selected ? 'text-slate-100' : 'text-slate-900'}`}>{option.label}</h3>
-                  <p className={`mt-2 text-sm leading-6 ${selected ? 'text-slate-300' : 'text-slate-600'}`}>{option.description}</p>
+                  <h3 className="text-2xl font-semibold text-slate-900">{option.label}</h3>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">{option.description}</p>
                 </button>
               )
             })}

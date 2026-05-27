@@ -1,3 +1,5 @@
+@config "../../tailwind.config.js";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -54,15 +56,52 @@ svg {
 /* Button & Form Control Custom Classes to enable centralized styling */
 @layer components {
   .btn-primary {
-    @apply rounded bg-brand-blue hover:bg-brand-blue-hover px-4 py-2 font-medium text-white shadow-sm transition-colors text-sm;
+    border-radius: 0.25rem;
+    background-color: var(--color-brand-blue);
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #fff;
+    box-shadow: 0 1px 2px 0 rgb(9 30 66 / 0.08);
+    transition: background-color 150ms ease;
+  }
+
+  .btn-primary:hover {
+    background-color: var(--color-brand-blue-hover);
   }
 
   .btn-secondary {
-    @apply rounded border border-brand-border bg-white hover:bg-brand-hover px-4 py-2 text-sm font-medium text-brand-slate transition-colors;
+    border: 1px solid var(--color-brand-border);
+    border-radius: 0.25rem;
+    background-color: #fff;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-brand-slate);
+    transition: background-color 150ms ease;
+  }
+
+  .btn-secondary:hover {
+    background-color: var(--color-brand-hover);
   }
 
   .input-text {
-    @apply rounded border border-brand-border bg-white px-3 py-2 text-sm text-brand-navy placeholder:text-slate-400 focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue;
+    border: 1px solid var(--color-brand-border);
+    border-radius: 0.25rem;
+    background-color: #fff;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    color: var(--color-brand-navy);
+  }
+
+  .input-text::placeholder {
+    color: #94a3b8;
+  }
+
+  .input-text:focus {
+    border-color: var(--color-brand-blue);
+    outline: none;
+    box-shadow: 0 0 0 1px var(--color-brand-blue);
   }
 }
 

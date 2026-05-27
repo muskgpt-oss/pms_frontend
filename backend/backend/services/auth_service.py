@@ -12,6 +12,7 @@ from database import get_collection
 from services.email_service import send_email_verification_otp
 from services.exceptions import ConflictError, NotFoundError, StorageUnavailableError, ValidationError
 from services.invite_service import accept_invite_for_email
+from services.project_service import create_project
 
 user_collection = get_collection("users")
 session_collection = get_collection("auth_sessions")
@@ -335,6 +336,16 @@ async def complete_onboarding(token: str, payload: dict) -> dict:
         document = await user_collection.find_one({"_id": session["user_id"]})
         if not document:
             raise NotFoundError("User not found")
+            
+        try:
+            await create_project({
+                "name": payload["space_name"].strip() or "Workspace",
+                "lead": document["email"],
+                "description": "Created during onboarding."
+            })
+        except Exception:
+            pass
+
         return _serialize_user(document)
     except (ValidationError, NotFoundError):
         raise
