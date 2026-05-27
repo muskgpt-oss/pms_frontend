@@ -886,7 +886,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f6f7fb] text-slate-900">
+    <div className="h-screen flex flex-col bg-[#f6f7fb] text-slate-900 overflow-hidden">
       {showSettingsMenu && (
         <>
           <button
@@ -1121,8 +1121,8 @@ export default function App() {
         </div>
       )}
 
-      <div className="flex min-h-[calc(100vh-53px)]">
-        <aside className={`relative border-r border-brand-border bg-brand-gray-light transition-all duration-200 flex flex-col justify-between ${sidebarCollapsed ? 'w-16' : 'w-[240px]'}`}>
+      <div className="flex flex-1 overflow-hidden">
+        <aside className={`relative border-r border-brand-border bg-brand-gray-light transition-all duration-200 flex flex-col justify-between overflow-y-auto ${sidebarCollapsed ? 'w-16' : 'w-[240px]'}`}>
           <div className="p-3">
             <div className="flex items-center justify-between mb-4 gap-2">
               {!sidebarCollapsed ? (
@@ -1304,7 +1304,7 @@ export default function App() {
           </>
         )}
 
-        <main className="flex-1 bg-[#f5f6fb] px-5 py-5" style={{ zoom: `${zoomPercent}%` }}>
+        <main className="flex-1 bg-[#f5f6fb] px-5 py-5 overflow-y-auto" style={{ zoom: `${zoomPercent}%` }}>
           <header className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-6">
               <button className="rounded bg-brand-blue px-3.5 py-1.5 font-semibold text-white shadow-sm hover:bg-brand-blue-hover transition-colors text-sm" onClick={() => !hasProjects ? openCreateProjectModal('scrum') : openCreateModal()}>
