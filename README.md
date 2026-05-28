@@ -119,6 +119,8 @@ Or update `backend/.env` values for your MongoDB deployment.
 3. Start a sprint from backlog.
 4. Move issues across board columns in the `Board` tab.
 
-##Screenshots
+## Screenshots
 <img width="1470" height="797" alt="Screenshot 2026-05-28 at 2 11 49 AM" src="https://github.com/user-attachments/assets/703b7daa-04ef-47f2-8040-057542d6c5bf" />
+
+
 
